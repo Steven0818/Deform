@@ -1,0 +1,36 @@
+﻿Build started 2016/6/14 下午 10:05:00.
+     1>Project "C:\Users\steven\Desktop\Deform2D\Deform2D.vcxproj" on node 2 (Build target(s)).
+     1>AddCudaCompileDeps:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /DWIN32 /D_DEBUG /D_CONSOLE /DWML_DLL_IMPORT /D_UNICODE /DUNICODE /D_AFXDLL /I"C:\ProgramData\NVIDIA Corporation\CUDA Samples\v7.5\common\inc" /I"C:\ProgramData\NVIDIA Corporation\CUDA Samples\v7.5\common\inc" /Isrc /I./ /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\/include" /IWml\Include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" /I. /FIcuda_runtime.h /c C:\Users\steven\Desktop\Deform2D\src\triangle.cu 
+       CudaBuild:
+         Compiling CUDA source file src\triangle.cu...
+         cmd.exe /C "C:\Users\steven\AppData\Local\Temp\tmp27f4dd13a61e41f4975ee702c971d7f2.cmd"
+         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\ProgramData\NVIDIA Corporation\CUDA Samples\v7.5\common\inc" -I"C:\ProgramData\NVIDIA Corporation\CUDA Samples\v7.5\common\inc" -Isrc -I./ -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\/include" -IWml\Include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static -Xcompiler "/wd 4819"  -g   -DWIN32 -DWIN32 -D_DEBUG -D_CONSOLE -DWML_DLL_IMPORT -D_UNICODE -DUNICODE -D_AFXDLL -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd " -o Debug\triangle.cu.obj "C:\Users\steven\Desktop\Deform2D\src\triangle.cu"
+         
+         C:\Users\steven\Desktop\Deform2D>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\ProgramData\NVIDIA Corporation\CUDA Samples\v7.5\common\inc" -I"C:\ProgramData\NVIDIA Corporation\CUDA Samples\v7.5\common\inc" -Isrc -I./ -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\/include" -IWml\Include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static -Xcompiler "/wd 4819"  -g   -DWIN32 -DWIN32 -D_DEBUG -D_CONSOLE -DWML_DLL_IMPORT -D_UNICODE -DUNICODE -D_AFXDLL -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd " -o Debug\triangle.cu.obj "C:\Users\steven\Desktop\Deform2D\src\triangle.cu" 
+     1>C:/Users/steven/Desktop/Deform2D/src/triangle.cu(46): warning : variable "fTriErr" was declared but never referenced
+     1>C:/Users/steven/Desktop/Deform2D/src/triangle.cu(44): warning : variable "fTriSumErr" was declared but never referenced
+     1>C:/Users/steven/Desktop/Deform2D/src/triangle.cu(46): warning : variable "fTriErr" was declared but never referenced
+     1>C:/Users/steven/Desktop/Deform2D/src/triangle.cu(44): warning : variable "fTriSumErr" was declared but never referenced
+         triangle.cu
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\steven\Desktop\Deform2D\Debug\Deform2D.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\lib\Win32" /LIBPATH:Wml\Release /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\lib\Win32" cudart_static.lib kernel32.lib user32.lib gdi32.lib winspool.lib WildMagic2.lib opengl32.lib glu32.lib glut32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"C:\Users\steven\Desktop\Deform2D\Debug\Deform2D.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\steven\Desktop\Deform2D\Debug\Deform2D.lib" /MACHINE:X86 /SAFESEH Debug\RigidMeshDeformer2D.cu.obj
+         Debug\triangle.cu.obj
+         Debug\test.cu.obj
+         Debug\Deform2D.obj
+         Debug\LinearAlgebra.obj
+         Debug\TriangleMesh.obj
+         Debug\WmlExtTriangleUtils.obj
+         Debug\WmlLinearSystemExt.obj
+         Debug\stdafx.obj
+         Debug\test.obj
+         Deform2D.vcxproj -> C:\Users\steven\Desktop\Deform2D\Debug\Deform2D.exe
+       PostBuildEvent:
+         copy Wml\Release\WildMagic2.dll C:\Users\steven\Desktop\Deform2D\Debug\
+         :VCEnd
+         複製了         1 個檔案。
+     1>Done Building Project "C:\Users\steven\Desktop\Deform2D\Deform2D.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:22.28
