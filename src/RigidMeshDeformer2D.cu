@@ -498,8 +498,9 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 	size_t nTriangles = m_vTriangles.size();
 	_RMSInfo("TriangleSize%d\n", nTriangles);
 	
-
+	printf("countNum %d\n", nTriangles);
 	for ( unsigned int i = 0; i < nTriangles; ++i ) {
+		
 		Triangle & t = m_vTriangles[i];
 		
 //		_RMSInfo("Triangle %d: \n", i);
@@ -543,6 +544,9 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 			
 			// n0x,n?? elems
 			m_mFirstMatrix[n0x][n0x] += 1 - 2*x + x*x + y*y;
+		/*	if (i == 20 && j == 1){
+				printf("point CPU value:%f\n", 1 - 2 * x + x*x + y*y);
+			}*/
 			m_mFirstMatrix[n0x][n1x] += 2*x - 2*x*x - 2*y*y;		//m_mFirstMatrix[n1x][n0x] += 2*x - 2*x*x - 2*y*y;
 			m_mFirstMatrix[n0x][n1y] += 2*y;						//m_mFirstMatrix[n1y][n0x] += 2*y;
 			m_mFirstMatrix[n0x][n2x] += -2 + 2*x;					//m_mFirstMatrix[n2x][n0x] += -2 + 2*x;
@@ -580,8 +584,15 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 			m_mFirstMatrix[n1y][n1y] += x*x + y*y;
 			m_mFirstMatrix[n1y][n2x] += -2*y;						//m_mFirstMatrix[n2x][n1y] += -2*y;
 			m_mFirstMatrix[n1y][n2y] += -2*x;						//m_mFirstMatrix[n2y][n1y] += -2*x;
+			//printf("point CPU value:%f\n", m_mFirstMatrix[0][0]);
 
-
+			if (i == 0 && j == 0){
+				printf("test each:%f\n", m_mFirstMatrix[n0x][n0x]);
+				printf("test each:%f\n", m_mFirstMatrix[n0x][n1x]);
+				printf("test each:%f\n", m_mFirstMatrix[n0x][n1y]);
+				printf("test each:%f\n", m_mFirstMatrix[n0x][n2x]);
+				printf("test each:%f\n", m_mFirstMatrix[n0x][n2y]);
+			}
 			fTriErr += (x*x + y*y)            * gUTest[n1y] * gUTest[n1y];
 			fTriErr += (-2*y)                 * gUTest[n1y] * gUTest[n2x];
 			fTriErr += (-2*x)                 * gUTest[n1y] * gUTest[n2y];
@@ -595,12 +606,12 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 			//_RMSInfo("  Error for vert %d (%d) - %f\n", j, t.nVerts[j], fTriErr);
 			fTriSumErr += fTriErr;
 		}
-		if (i == 1)
-			printf("output test CPU %lf", m_mFirstMatrix[0][0]);
 		//_RMSInfo("  Total Error: %f\n", fTriSumErr);
 	}
-	PreComputeTriangle(m_vVertexMap_GPU, Matrix_GPU, 2 * nVerts, 2 * nVerts, m_vTriagles_GPU);
-	cudaMemcpy(Matrix_CPU, Matrix_GPU, sizeof(double)* 2 * 2 * nVerts*nVerts, cudaMemcpyDeviceToHost);
+	
+
+	PreComputeTriangle(m_vVertexMap_GPU, Matrix_CPU, 2 * nVerts, 2 * nVerts, nTriangles, m_vTriagles_GPU);
+	//cudaMemcpy(Matrix_CPU, Matrix_GPU, sizeof(double)* 2 * 2 * nVerts*nVerts, cudaMemcpyDeviceToHost);
 	Wml::GMatrixd test(2*nVerts,2*nVerts, Matrix_CPU);
 	if (test == m_mFirstMatrix)
 		printf("pass\n");
