@@ -13,4 +13,10 @@ struct Triangle_GPU{
 		float Y[3];
 };
 
-void PreComputeTriangle(unsigned int*, double*, unsigned int, unsigned int,int , Triangle_GPU*);
+
+struct Vertex_GPU{
+	unsigned int nTriangle = 0;
+	int Triangles[10];
+};
+
+void PreComputeTriangle(unsigned int*, double*, unsigned int, unsigned int, Triangle_GPU*,Vertex_GPU* , unsigned int );

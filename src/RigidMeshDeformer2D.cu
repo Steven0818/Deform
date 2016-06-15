@@ -84,6 +84,9 @@ void RigidMeshDeformer2D::InitializeFromMesh( TriangleMesh * pMesh )
 	m_vTriagles_CPU = new Triangle_GPU[nTris];
 	cudaMalloc((void**)& m_vTriagles_GPU, sizeof(Triangle_GPU)*nTris);
 
+	m_Vertex_CPU = new Vertex_GPU[nVerts];
+	cudaMalloc((void**)& m_Vertex_GPU, sizeof(Vertex_GPU)*nVerts);
+
 
 	// set up triangle-local coordinate systems
 	for ( unsigned int i = 0; i < nTris; ++i ) {
@@ -120,8 +123,23 @@ void RigidMeshDeformer2D::InitializeFromMesh( TriangleMesh * pMesh )
 			t_c.X[j] = fX;
 			t_c.Y[j] = fY;
 			t_c.nVert[j] = t.nVerts[j];
+			m_Vertex_CPU[t.nVerts[j]].Triangles[m_Vertex_CPU[t.nVerts[j]].nTriangle++] = i;
+			if (m_Vertex_CPU[t.nVerts[j]].nTriangle > 9)
+				printf("danger\n");
 		}
 	}
+	//for debug
+	for (int i = 0; i < nVerts; i++){
+		Vertex_GPU v = m_Vertex_CPU[i];
+		printf("# %d Vert", i);
+		for (int j = 0; j < v.nTriangle; j++)
+		{
+			Triangle_GPU t = m_vTriagles_CPU[v.Triangles[j]];
+			printf("vertex %d %d %d\n", t.nVert[0], t.nVert[1], t.nVert[2]);
+		}
+	}
+	//
+	cudaMemcpy(m_Vertex_GPU, m_Vertex_CPU, sizeof(Vertex_GPU)*nVerts,cudaMemcpyHostToDevice);
 	cudaMemcpy(m_vTriagles_GPU, m_vTriagles_CPU, sizeof(Triangle_GPU)*nTris, cudaMemcpyHostToDevice);
 	Matrix_CPU = new double[2 * nVerts * 2 * nVerts];
 	cudaMalloc((void**)&Matrix_GPU, sizeof(double) * 4 * nVerts*nVerts);
@@ -442,6 +460,9 @@ void RigidMeshDeformer2D::ApplyFittingStep()
 void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 {
 	// put constraints into vector (will be useful)
+
+	clock_t t1, t2;
+	t1 = clock();
 	std::vector<Constraint> vConstraintsVec;
 	std::set<Constraint>::iterator cur(m_vConstraints.begin()), end(m_vConstraints.end());
 	while ( cur != end )
@@ -498,9 +519,9 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 	size_t nTriangles = m_vTriangles.size();
 	_RMSInfo("TriangleSize%d\n", nTriangles);
 	
-	printf("countNum %d\n", nTriangles);
+	cudaMemset(Matrix_GPU, 0.0, sizeof(double) * 4 * nVerts*nVerts);
+	/*
 	for ( unsigned int i = 0; i < nTriangles; ++i ) {
-		
 		Triangle & t = m_vTriangles[i];
 		
 //		_RMSInfo("Triangle %d: \n", i);
@@ -544,9 +565,6 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 			
 			// n0x,n?? elems
 			m_mFirstMatrix[n0x][n0x] += 1 - 2*x + x*x + y*y;
-		/*	if (i == 20 && j == 1){
-				printf("point CPU value:%f\n", 1 - 2 * x + x*x + y*y);
-			}*/
 			m_mFirstMatrix[n0x][n1x] += 2*x - 2*x*x - 2*y*y;		//m_mFirstMatrix[n1x][n0x] += 2*x - 2*x*x - 2*y*y;
 			m_mFirstMatrix[n0x][n1y] += 2*y;						//m_mFirstMatrix[n1y][n0x] += 2*y;
 			m_mFirstMatrix[n0x][n2x] += -2 + 2*x;					//m_mFirstMatrix[n2x][n0x] += -2 + 2*x;
@@ -584,15 +602,8 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 			m_mFirstMatrix[n1y][n1y] += x*x + y*y;
 			m_mFirstMatrix[n1y][n2x] += -2*y;						//m_mFirstMatrix[n2x][n1y] += -2*y;
 			m_mFirstMatrix[n1y][n2y] += -2*x;						//m_mFirstMatrix[n2y][n1y] += -2*x;
-			//printf("point CPU value:%f\n", m_mFirstMatrix[0][0]);
 
-			if (i == 0 && j == 0){
-				printf("test each:%f\n", m_mFirstMatrix[n0x][n0x]);
-				printf("test each:%f\n", m_mFirstMatrix[n0x][n1x]);
-				printf("test each:%f\n", m_mFirstMatrix[n0x][n1y]);
-				printf("test each:%f\n", m_mFirstMatrix[n0x][n2x]);
-				printf("test each:%f\n", m_mFirstMatrix[n0x][n2y]);
-			}
+
 			fTriErr += (x*x + y*y)            * gUTest[n1y] * gUTest[n1y];
 			fTriErr += (-2*y)                 * gUTest[n1y] * gUTest[n2x];
 			fTriErr += (-2*x)                 * gUTest[n1y] * gUTest[n2y];
@@ -606,21 +617,26 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 			//_RMSInfo("  Error for vert %d (%d) - %f\n", j, t.nVerts[j], fTriErr);
 			fTriSumErr += fTriErr;
 		}
+		if (i == 1)
+			printf("output test CPU %lf\n", m_mFirstMatrix[0][0]);
 		//_RMSInfo("  Total Error: %f\n", fTriSumErr);
 	}
-	
-
-	PreComputeTriangle(m_vVertexMap_GPU, Matrix_CPU, 2 * nVerts, 2 * nVerts, nTriangles, m_vTriagles_GPU);
-	//cudaMemcpy(Matrix_CPU, Matrix_GPU, sizeof(double)* 2 * 2 * nVerts*nVerts, cudaMemcpyDeviceToHost);
+	*/
+	PreComputeTriangle(m_vVertexMap_GPU, Matrix_GPU, 2 * nVerts, 2 * nVerts, m_vTriagles_GPU,m_Vertex_GPU,nVerts);
+	cudaMemcpy(Matrix_CPU, Matrix_GPU, sizeof(double)* 2 * 2 * nVerts*nVerts, cudaMemcpyDeviceToHost);
 	Wml::GMatrixd test(2*nVerts,2*nVerts, Matrix_CPU);
-	if (test == m_mFirstMatrix)
-		printf("pass\n");
+	/*if (test == m_mFirstMatrix)
+		printf("-------------\n Output pass\n");
 	else
-		printf("wrong\n");
+		printf("-------------\n Output wrong\n");
+		*/
 
 	printf("test CPU %lf\ntest GPU%lf\n array %lf\n", m_mFirstMatrix[0][0],test[0][0],Matrix_CPU[0]);
 
-	//m_mFirstMatrix.SetMatrix(2 * nVerts, 2 * nVerts, Matrix_CPU);
+	m_mFirstMatrix.SetMatrix(2 * nVerts, 2 * nVerts, Matrix_CPU);
+	t2 = clock();
+
+	printf("GPU time %lf", (t2 - t1) / (double)(CLOCKS_PER_SEC));
 	// test...
 	Wml::GVectord gUTemp = m_mFirstMatrix * gUTest;
 	double fSum = gUTemp.Dot( gUTest );
@@ -647,7 +663,7 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 	}
 	_RMSInfo("\n\n");
 */
-
+	t1 = clock();
 	// extract G00 matrix
 	Wml::GMatrixd mG00( 2*nFreeVerts, 2*nFreeVerts );
 	ExtractSubMatrix( m_mFirstMatrix, 0, 0, mG00 );
@@ -657,11 +673,16 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 	ExtractSubMatrix( m_mFirstMatrix, 0, 2*nFreeVerts, mG01 );
 	Wml::GMatrixd mG10( 2 * (int)nConstraints, 2 * (int)nFreeVerts );
 	ExtractSubMatrix( m_mFirstMatrix, 2*nFreeVerts, 0, mG10 );
-
+	t2 = clock();
+	printf("Matrix time %lf\n", (t2 - t1) / (double)(CLOCKS_PER_SEC));
+	t1 = clock();
 	// ok, now compute GPrime = G00 + Transpose(G00) and B = G01 + Transpose(G10)
 	Wml::GMatrixd mGPrime = mG00 + mG00.Transpose();
 	Wml::GMatrixd mB = mG01 + mG10.Transpose();
 
+	t2 = clock();
+	printf("Matrix tranpose time %lf\n", (t2 - t1) / (double)(CLOCKS_PER_SEC));
+	t1 = clock();
 	// ok, now invert GPrime
 	Wml::GMatrixd mGPrimeInverse( mGPrime.GetRows(), mGPrime.GetColumns() );
 	bool bInverted = Wml::LinearSystemd::Inverse( mGPrime, mGPrimeInverse );
@@ -669,10 +690,16 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 		DebugBreak();
 
 	// now compute -GPrimeInverse * B
+	t2 = clock();
+	printf("Matrix Inverse time %lf\n", (t2 - t1) / (double)(CLOCKS_PER_SEC));
+	t1 = clock();
 	Wml::GMatrixd mFinal = mGPrimeInverse * mB;
 	mFinal *= -1;
 
 	m_mFirstMatrix = mFinal;		// [RMS: not efficient!]
+	t2 = clock();
+	printf("Matrix multiple time %lf\n", (t2 - t1) / (double)(CLOCKS_PER_SEC));
+
 }
 
 

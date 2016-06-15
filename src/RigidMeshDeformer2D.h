@@ -17,7 +17,6 @@
 
 
 
-
 namespace rmsmesh {
 
 
@@ -25,7 +24,9 @@ class RigidMeshDeformer2D
 {
 public:
 	RigidMeshDeformer2D();
-	~RigidMeshDeformer2D() { delete []m_vTriagles_CPU;delete []Matrix_CPU;
+	~RigidMeshDeformer2D() {
+		delete[]m_vTriagles_CPU; delete[]Matrix_CPU; delete[]m_Vertex_CPU;
+		cudaFree(m_Vertex_GPU);
 		cudaFree(m_vTriagles_GPU);
 		cudaFree(Matrix_GPU);
 		cudaFree(m_vVertexMap_GPU);
@@ -107,6 +108,7 @@ protected:
 	void InvalidateSetup() { m_bSetupValid = false; }
 	void ValidateSetup();
 	Triangle_GPU *m_vTriagles_CPU, *m_vTriagles_GPU;
+	Vertex_GPU *m_Vertex_CPU, *m_Vertex_GPU;
 
 	Wml::GMatrixd m_mFirstMatrix;
 	unsigned int NumVerts;
