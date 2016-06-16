@@ -20,3 +20,4 @@ struct Vertex_GPU{
 };
 
 void PreComputeTriangle(unsigned int*, double*, unsigned int, unsigned int, Triangle_GPU*,Vertex_GPU* , unsigned int );
+void inverse(double* matrix, int n, double* invMat);

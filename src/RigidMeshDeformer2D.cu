@@ -5,6 +5,7 @@
 #include "WmlExtTriangleUtils.h"
 #include "rmsdebug.h"
 
+
 #include <time.h>
 
 using namespace rmsmesh;
@@ -362,6 +363,8 @@ void RigidMeshDeformer2D::PrecomputeFittingMatrices()
 void RigidMeshDeformer2D::ApplyFittingStep()
 {
 	// put constraints into vector (will be useful)
+	clock_t t1, t2;
+	t1 = clock();
 	std::vector<Constraint> vConstraintsVec;
 	std::set<Constraint>::iterator cur(m_vConstraints.begin()), end(m_vConstraints.end());
 	while ( cur != end )
@@ -430,7 +433,12 @@ void RigidMeshDeformer2D::ApplyFittingStep()
 	vRHSY *= -1;
 	Wml::GVectord vSolutionY( (int)nFreeVerts );
 //	Wml::LinearSystemd::Solve( m_mHYPrime, vRHSY, vSolutionY );
+	
+	
 	bResult = Wml::LinearSystemExtd::LUBackSub( m_mLUDecompY, vRHSY, vSolutionY );
+
+	// test...
+
 	if (!bResult)
 		DebugBreak();
 
@@ -443,7 +451,9 @@ void RigidMeshDeformer2D::ApplyFittingStep()
 		m_vDeformedVerts[i].vPosition.X() = (float)vSolutionX[nRow];
 		m_vDeformedVerts[i].vPosition.Y() = (float)vSolutionY[nRow];
 	}
+	t2 = clock();
 
+	printf("CPU Move time %lf\n", (t2 - t1) / (double)(CLOCKS_PER_SEC));
 }
 
 
@@ -639,6 +649,7 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 	printf("GPU time %lf", (t2 - t1) / (double)(CLOCKS_PER_SEC));
 	// test...
 	Wml::GVectord gUTemp = m_mFirstMatrix * gUTest;
+
 	double fSum = gUTemp.Dot( gUTest );
 	_RMSInfo("    (test) Residual is %f\n", fSum);
 
@@ -685,10 +696,16 @@ void RigidMeshDeformer2D::PrecomputeOrientationMatrix()
 	t1 = clock();
 	// ok, now invert GPrime
 	Wml::GMatrixd mGPrimeInverse( mGPrime.GetRows(), mGPrime.GetColumns() );
-	bool bInverted = Wml::LinearSystemd::Inverse( mGPrime, mGPrimeInverse );
+	printf("rows:%d, column:%d", mGPrime.GetRows(), mGPrime.GetColumns());
+	double* mGPrime_host = mGPrime;
+	double* mGPrime_inv = mGPrimeInverse;
+	inverse(mGPrime_host, mGPrime.GetRows(), mGPrime_inv);
+
+
+	/*bool bInverted = Wml::LinearSystemd::Inverse( mGPrime, mGPrimeInverse );
 	if (!bInverted)
 		DebugBreak();
-
+		*/
 	// now compute -GPrimeInverse * B
 	t2 = clock();
 	printf("Matrix Inverse time %lf\n", (t2 - t1) / (double)(CLOCKS_PER_SEC));

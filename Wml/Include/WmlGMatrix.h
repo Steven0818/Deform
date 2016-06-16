@@ -48,6 +48,7 @@ public:
     int GetRows () const;
     int GetColumns () const;
     int GetQuantity () const;
+	//Real** GetData(){ return m_aafEntry; }
     operator const Real* () const;
     operator Real* ();
     const Real* operator[] (int iRow) const;
@@ -97,7 +98,8 @@ public:
     GVector<Real> operator* (const GVector<Real>& rkV) const;  // M * v
     Real QForm (const GVector<Real>& rkU, const GVector<Real>& rkV)
         const;  // u^T*M*v
-
+	Real** m_aafEntry;
+	Real* m_afData;
 protected:
     // Support for allocation and deallocation.  The allocation call requires
     // m_iRows, m_iCols, and m_iQuantity to have already been correctly
@@ -111,12 +113,12 @@ protected:
     int m_iRows, m_iCols, m_iQuantity;
 
     // the matrix is stored in row-major form as a 1-dimensional array
-    Real* m_afData;
+    
 
     // An array of pointers to the rows of the matrix.  The separation of
     // row pointers and actual data supports swapping of rows in linear
     // algebraic algorithms such as solving linear systems of equations.
-    Real** m_aafEntry;
+   
 };
 
 // c * M

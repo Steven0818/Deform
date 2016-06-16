@@ -2,9 +2,11 @@
 #include <helper_functions.h> // helper functions for SDK examples
 #include "device_launch_parameters.h"
 #include <helper_cuda.h>
+#include <time.h>
 #include "iostream"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include "cublas_v2.h"
 
 
 using namespace std;
@@ -148,6 +150,97 @@ __global__ void PreComputeTriangle_GPU(unsigned int* m_vVertexMap,double* m_mFir
 			printf("output test GPU %lf", m_mFirstMatrix[0]);
 }
 
+__global__ void nodiag_normalize(double *A, double *I, int n, int i){
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n)
+		if (x == i && x != y){
+			I[x*n + y] /= A[i*n + i];
+			A[x*n + y] /= A[i*n + i];
+		}
+
+}
+
+__global__ void diag_normalize(double *A, double *I, int n, int i){
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n)
+		if (x == y && x == i){
+			I[x*n + y] /= A[i*n + i];
+			A[x*n + y] /= A[i*n + i];
+		}
+
+}
+
+__global__ void gaussjordan(double *A, double *I, int n, int i)
+{
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n){
+		if (x != i){
+			I[x*n + y] -= I[i*n + y] * A[x*n + i];
+			if (y != i){
+				A[x*n + y] -= A[i*n + y] * A[x*n + i];
+			}
+		}
+	}
+
+}
+
+__global__ void set_zero(double *A, double *I, int n, int i){
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n){
+		if (x != i){
+			if (y == i){
+				A[x*n + y] = 0;
+			}
+		}
+	}
+}
+
 void PreComputeTriangle(unsigned int*m_vVertexMap_GPU, double* m_mFirstMatrix, unsigned int row, unsigned int col, Triangle_GPU* m_vTriangles,Vertex_GPU* m_Vertex, unsigned int nVerts){
 	PreComputeTriangle_GPU<<< nVerts/64+1,64 >>>(m_vVertexMap_GPU, m_mFirstMatrix, row, col, m_vTriangles, m_Vertex, nVerts);
+}
+
+void inverse(double* matrix,int n,double* invMat){
+	clock_t t1, t2;
+	double* mGPrime_host = matrix;
+	double* mGPrime_device;
+	cudaMalloc((void**)&mGPrime_device, n*n*sizeof(double));
+	cudaMemcpy(mGPrime_device, matrix, n*n*sizeof(double), cudaMemcpyHostToDevice);
+
+
+	
+	double* I_device;
+	cudaMalloc((void**)&I_device, n*n*sizeof(double));
+	double* I = new double[n*n];
+	t1 = clock();
+	for (int i = 0; i<n; i++){
+		for (int j = 0; j<n; j++){
+			if (i == j) I[i*n + i] = 1.0;
+			else I[i*n + j] = 0.0;
+		}
+	}
+	t2 = clock();
+	printf("for loop cost %lf ms\n", (t2 - t1) / (double)(CLOCKS_PER_SEC));
+	cudaMemcpy(I_device, I, n*n*sizeof(double), cudaMemcpyHostToDevice);
+	int blocksize = 16;
+	dim3 threadsPerBlock(blocksize, blocksize);
+	dim3 numBlocks((n + blocksize - 1) / blocksize, (n + blocksize - 1) / blocksize);
+	for (int i = 0; i<n; i++){
+		nodiag_normalize << <numBlocks, threadsPerBlock >> >(mGPrime_device, I_device, n, i);
+		diag_normalize << <numBlocks, threadsPerBlock >> >(mGPrime_device, I_device, n, i);
+		gaussjordan << <numBlocks, threadsPerBlock >> >(mGPrime_device, I_device, n, i);
+		set_zero << <numBlocks, threadsPerBlock >> >(mGPrime_device, I_device, n, i);
+	}
+	cudaMemcpy(invMat, I_device, n*n*sizeof(double), cudaMemcpyDeviceToHost);
+	cudaFree(I_device);
+	cudaFree(mGPrime_device);
+
+	//cudaMemcpy(I, d_A, n*n*sizeof(double), cudaMemcpyDeviceToHost);
 }
